@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cold-Chain Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-speedometer2"></i> Inventory Dashboard</h1>
+        <p class="text-muted">Overview of temperature-sensitive inventory status</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam display-4 text-primary"></i>
+                <h2 class="mt-3">{{ stats.total_products }}</h2>
+                <p class="text-muted">Total Products</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <i class="bi bi-stack display-4 text-info"></i>
+                <h2 class="mt-3">{{ stats.total_batches }}</h2>
+                <p class="text-muted">Total Batches</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle display-4 text-success"></i>
+                <h2 class="mt-3">{{ stats.safe_batches }}</h2>
+                <p class="text-muted">Safe Batches</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle display-4 text-warning"></i>
+                <h2 class="mt-3">{{ stats.warning_batches }}</h2>
+                <p class="text-muted">Warning Batches</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-circle display-4 text-danger"></i>
+                <h2 class="mt-3">{{ stats.critical_batches }}</h2>
+                <p class="text-muted">Critical Batches</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-secondary">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle display-4 text-secondary"></i>
+                <h2 class="mt-3">{{ stats.expired_batches }}</h2>
+                <p class="text-muted">Expired Batches</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-plus-circle display-4 text-primary"></i>
+                <h5 class="card-title mt-3">Add New Product</h5>
+                <p class="card-text">Register a new temperature-sensitive product</p>
+                <a href="{{ url_for('products.add_product') }}" class="btn btn-primary">Add Product</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-plus-square display-4 text-success"></i>
+                <h5 class="card-title mt-3">Create Batch</h5>
+                <p class="card-text">Create a new product batch</p>
+                <a href="{{ url_for('batches.add_batch') }}" class="btn btn-success">Create Batch</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-bar-graph display-4 text-info"></i>
+                <h5 class="card-title mt-3">Generate Reports</h5>
+                <p class="card-text">Export inventory and violation reports</p>
+                <a href="{{ url_for('reports.index') }}" class="btn btn-info">View Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expiring Soon -->
+{% if expiring_soon %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Expiring Within 7 Days</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Product</th>
+                                <th>Expiry Date</th>
+                                <th>Days Left</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in expiring_soon %}
+                            <tr>
+                                <td>#{{ batch.batch_id }}</td>
+                                <td>{{ batch.product.product_name }}</td>
+                                <td>{{ batch.adjusted_expiry|format_date }}</td>
+                                <td>{{ batch.days_until_expiry() }}</td>
+                                <td><span class="badge bg-{{ batch.status|status_color }}">{{ batch.status }}</span></td>
+                                <td>
+                                    <a href="{{ url_for('batches.view_batch', batch_id=batch.batch_id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('batches.expiring_batches') }}" class="btn btn-warning">View All Expiring</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Temperature Violations -->
+{% if recent_violations %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-thermometer-high"></i> Recent Temperature Violations</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Product</th>
+                                <th>Temperature</th>
+                                <th>Days Deducted</th>
+                                <th>Recorded</th>
+                                <th>Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_violations %}
+                            <tr>
+                                <td>#{{ log.batch_id }}</td>
+                                <td>{{ log.batch.product.product_name }}</td>
+                                <td class="text-danger">{{ log.temperature }}°C</td>
+                                <td>{{ log.days_deducted|round(2) }} days</td>
+                                <td>{{ log.recorded_at|format_datetime }}</td>
+                                <td>{{ log.employee_name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('temperature.recent_violations') }}" class="btn btn-danger">View All Violations</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Critical Batches -->
+{% if critical_batches %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Critical Batches (1-3 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Expiry Date</th>
+                                <th>Days Left</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in critical_batches %}
+                            <tr>
+                                <td>#{{ batch.batch_id }}</td>
+                                <td>{{ batch.product.product_name }}</td>
+                                <td>{{ batch.product.category }}</td>
+                                <td>{{ batch.adjusted_expiry|format_date }}</td>
+                                <td class="text-danger fw-bold">{{ batch.days_until_expiry() }}</td>
+                                <td>
+                                    <a href="{{ url_for('batches.view_batch', batch_id=batch.batch_id) }}" class="btn btn-sm btn-outline-danger">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

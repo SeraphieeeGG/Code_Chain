@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Expiring Products - Cold-Chain Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-exclamation-triangle"></i> Expiring Products</h1>
+        <p class="text-muted">Products nearing expiration or already expired</p>
+    </div>
+</div>
+
+<!-- Filter Options -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('batches.expiring_batches') }}" class="row">
+            <div class="col-md-4">
+                <label for="days" class="form-label">Show batches expiring within:</label>
+            </div>
+            <div class="col-md-4">
+                <select name="days" id="days" class="form-select" onchange="this.form.submit()">
+                    <option value="3" {% if days == 3 %}selected{% endif %}>3 days</option>
+                    <option value="7" {% if days == 7 %}selected{% endif %}>7 days</option>
+                    <option value="14" {% if days == 14 %}selected{% endif %}>14 days</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>30 days</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Expiring Soon Section -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Expiring Within {{ days }} Days</h5>
+            </div>
+            <div class="card-body">
+                {% if expiring %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Adjusted Expiry</th>
+                                <th>Days Left</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in expiring %}
+                            <tr>
+                                <td>#{{ batch.batch_id }}</td>
+                                <td>{{ batch.product.product_name }}</td>
+                                <td><span class="badge bg-info">{{ batch.product.category }}</span></td>
+                                <td>{{ batch.adjusted_expiry|format_date }}</td>
+                                <td>
+                                    <span class="{% if batch.days_until_expiry() <= 1 %}text-danger{% elif batch.days_until_expiry() <= 3 %}text-warning{% endif %} fw-bold">
+                                        {{ batch.days_until_expiry() }} days
+                                    </span>
+                                </td>
+                                <td>{{ batch.quantity }}</td>
+                                <td><span class="badge bg-{{ batch.status|status_color }}">{{ batch.status }}</span></td>
+                                <td>
+                                    <a href="{{ url_for('batches.view_batch', batch_id=batch.batch_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted mt-3">Total: {{ expiring|length }} batch(es) expiring soon</p>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle display-4 text-success"></i>
+                    <p class="mt-3 text-muted">No batches expiring within {{ days }} days.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expired Section -->
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-x-circle"></i> Expired Batches</h5>
+            </div>
+            <div class="card-body">
+                {% if expired %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Expired On</th>
+                                <th>Days Overdue</th>
+                                <th>Quantity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in expired %}
+                            <tr>
+                                <td>#{{ batch.batch_id }}</td>
+                                <td>{{ batch.product.product_name }}</td>
+                                <td><span class="badge bg-info">{{ batch.product.category }}</span></td>
+                                <td>{{ batch.adjusted_expiry|format_date }}</td>
+                                <td class="text-danger fw-bold">{{ batch.days_until_expiry()|abs }} days</td>
+                                <td>{{ batch.quantity }}</td>
+                                <td>
+                                    <a href="{{ url_for('batches.view_batch', batch_id=batch.batch_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <form method="post" action="{{ url_for('batches.delete_batch', batch_id=batch.batch_id) }}" style="display: inline;" onsubmit="return confirmDelete('Expired Batch #{{ batch.batch_id }}')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted mt-3">Total: {{ expired|length }} expired batch(es)</p>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle display-4 text-success"></i>
+                    <p class="mt-3 text-muted">No expired batches found.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

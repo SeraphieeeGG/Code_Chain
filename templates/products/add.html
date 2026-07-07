@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Add Product - Cold-Chain Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-plus-circle"></i> Add New Product</h1>
+        <p class="text-muted">Register a new temperature-sensitive product</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="{{ url_for('products.add_product') }}" novalidate>
+                    <div class="mb-3">
+                        <label for="product_name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="product_name" name="product_name" 
+                               value="{{ form_data.product_name if form_data else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="category" name="category" 
+                               value="{{ form_data.category if form_data else '' }}" 
+                               placeholder="e.g., Dairy, Meat, Vegetables" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ideal_temperature" class="form-label">Ideal Temperature (°C) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.1" class="form-control" id="ideal_temperature" name="ideal_temperature" 
+                                   value="{{ form_data.ideal_temperature if form_data else '' }}" 
+                                   onchange="validateTemperatureComparison()" required>
+                            <small class="form-text text-muted">Optimal storage temperature</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="maximum_temperature" class="form-label">Maximum Safe Temperature (°C) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.1" class="form-control" id="maximum_temperature" name="maximum_temperature" 
+                                   value="{{ form_data.maximum_temperature if form_data else '' }}" 
+                                   onchange="validateTemperatureComparison()" required>
+                            <small class="form-text text-muted">Threshold for shelf-life adjustment</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="shelf_life_days" class="form-label">Default Shelf Life (days) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="shelf_life_days" name="shelf_life_days" 
+                               value="{{ form_data.shelf_life_days if form_data else '' }}" 
+                               min="1" required>
+                        <small class="form-text text-muted">Standard shelf life under ideal conditions</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Add Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle"></i> Product Guidelines</h5>
+                <ul class="small">
+                    <li>Use descriptive product names</li>
+                    <li>Group similar items by category</li>
+                    <li>Ideal temperature is the target storage condition</li>
+                    <li>Maximum temperature triggers shelf-life reduction</li>
+                    <li>Shelf life is calculated from manufacturing date</li>
+                    <li>All temperature values in Celsius</li>
+                </ul>
+                
+                <h6 class="mt-3">Temperature Examples:</h6>
+                <ul class="small">
+                    <li><strong>Frozen:</strong> -18°C to -15°C</li>
+                    <li><strong>Refrigerated:</strong> 2°C to 4°C</li>
+                    <li><strong>Cool:</strong> 8°C to 15°C</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

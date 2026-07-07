@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Batch #{{ batch.batch_id }} - Cold-Chain Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1><i class="bi bi-stack"></i> Batch #{{ batch.batch_id }}</h1>
+        <p class="text-muted">{{ batch.product.product_name }}</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('temperature.log_temperature', batch_id=batch.batch_id) }}" class="btn btn-warning">
+            <i class="bi bi-thermometer"></i> Log Temperature
+        </a>
+        <a href="{{ url_for('batches.edit_batch', batch_id=batch.batch_id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{{ url_for('batches.list_batches') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Batch Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="50%">Batch ID:</th>
+                        <td>#{{ batch.batch_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Product:</th>
+                        <td><strong>{{ batch.product.product_name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Category:</th>
+                        <td><span class="badge bg-info">{{ batch.product.category }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Manufacturing Date:</th>
+                        <td>{{ batch.manufacturing_date|format_date }}</td>
+                    </tr>
+                    <tr>
+                        <th>Original Expiry:</th>
+                        <td>{{ batch.original_expiry|format_date }}</td>
+                    </tr>
+                    <tr>
+                        <th>Adjusted Expiry:</th>
+                        <td class="{% if batch.adjusted_expiry < batch.original_expiry %}text-danger fw-bold{% endif %}">
+                            {{ batch.adjusted_expiry|format_date }}
+                            {% if batch.adjusted_expiry < batch.original_expiry %}
+                            <i class="bi bi-exclamation-triangle" title="Expiry adjusted due to temperature violations"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Days Until Expiry:</th>
+                        <td>
+                            {% set days = batch.days_until_expiry() %}
+                            {% if days < 0 %}
+                                <span class="text-danger fw-bold">Expired ({{ days|abs }} days ago)</span>
+                            {% else %}
+                                <span class="{% if days <= 1 %}text-danger{% elif days <= 3 %}text-warning{% endif %} fw-bold">
+                                    {{ days }} days
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Quantity:</th>
+                        <td>{{ batch.quantity }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td><span class="badge bg-{{ batch.status|status_color }}">{{ batch.status }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Storage Requirements</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Ideal Temperature:</strong> {{ batch.product.ideal_temperature }}°C</p>
+                <p><strong>Maximum Safe Temperature:</strong> {{ batch.product.maximum_temperature }}°C</p>
+                <p><strong>Default Shelf Life:</strong> {{ batch.product.shelf_life_days }} days</p>
+                
+                {% set total_logs = batch.temperature_logs|length %}
+                {% set violations = batch.temperature_logs|selectattr('days_deducted', 'gt', 0)|list|length %}
+                
+                <hr>
+                <p><strong>Temperature Logs:</strong> {{ total_logs }}</p>
+                <p><strong>Violations:</strong> {{ violations }}</p>
+                
+                {% if violations > 0 %}
+                <div class="alert alert-danger small mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    This batch has {{ violations }} temperature violation(s) resulting in shelf-life reduction.
+                </div>
+                {% else %}
+                <div class="alert alert-success small mb-0">
+                    <i class="bi bi-check-circle"></i> 
+                    No temperature violations recorded for this batch.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Temperature History -->
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Temperature History</h5>
+            </div>
+            <div class="card-body">
+                {% if batch.temperature_logs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Log ID</th>
+                                <th>Temperature</th>
+                                <th>Max Safe</th>
+                                <th>Days Deducted</th>
+                                <th>Recorded At</th>
+                                <th>Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in batch.temperature_logs|sort(attribute='recorded_at', reverse=True) %}
+                            <tr class="{% if log.days_deducted > 0 %}table-danger{% endif %}">
+                                <td>#{{ log.log_id }}</td>
+                                <td class="{% if log.temperature > batch.product.maximum_temperature %}text-danger fw-bold{% else %}text-success{% endif %}">
+                                    {{ log.temperature }}°C
+                                </td>
+                                <td>{{ batch.product.maximum_temperature }}°C</td>
+                                <td>
+                                    {% if log.days_deducted > 0 %}
+                                        <span class="text-danger fw-bold">{{ log.days_deducted|round(2) }} days</span>
+                                    {% else %}
+                                        <span class="text-success">0 days</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.recorded_at|format_datetime }}</td>
+                                <td>{{ log.employee_name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No temperature logs recorded for this batch yet.</p>
+                    <a href="{{ url_for('temperature.log_temperature', batch_id=batch.batch_id) }}" class="btn btn-warning">
+                        <i class="bi bi-thermometer"></i> Log First Temperature
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

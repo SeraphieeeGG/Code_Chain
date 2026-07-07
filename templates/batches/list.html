@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Batches - Cold-Chain Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1><i class="bi bi-stack"></i> Batches</h1>
+        <p class="text-muted">Manage product batches</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('batches.add_batch') }}" class="btn btn-success">
+            <i class="bi bi-plus-square"></i> Create Batch
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('batches.list_batches') }}">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <input type="text" name="search" class="form-control" placeholder="Search batches..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="Safe" {% if status_filter == 'Safe' %}selected{% endif %}>Safe</option>
+                        <option value="Warning" {% if status_filter == 'Warning' %}selected{% endif %}>Warning</option>
+                        <option value="Critical" {% if status_filter == 'Critical' %}selected{% endif %}>Critical</option>
+                        <option value="Expired" {% if status_filter == 'Expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <select name="product_id" class="form-select">
+                        <option value="">All Products</option>
+                        {% for product in products %}
+                        <option value="{{ product.product_id }}" {% if product_filter|string == product.product_id|string %}selected{% endif %}>
+                            {{ product.product_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <button type="submit" class="btn btn-secondary w-100">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Batches Table -->
+{% if batches %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Product</th>
+                        <th>Mfg Date</th>
+                        <th>Original Expiry</th>
+                        <th>Adjusted Expiry</th>
+                        <th>Days Left</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in batches %}
+                    <tr>
+                        <td>#{{ batch.batch_id }}</td>
+                        <td>{{ batch.product.product_name }}</td>
+                        <td>{{ batch.manufacturing_date|format_date }}</td>
+                        <td>{{ batch.original_expiry|format_date }}</td>
+                        <td>{{ batch.adjusted_expiry|format_date }}</td>
+                        <td>
+                            {% set days = batch.days_until_expiry() %}
+                            {% if days < 0 %}
+                                <span class="text-danger">Expired</span>
+                            {% else %}
+                                {{ days }}
+                            {% endif %}
+                        </td>
+                        <td>{{ batch.quantity }}</td>
+                        <td><span class="badge bg-{{ batch.status|status_color }}">{{ batch.status }}</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('batches.view_batch', batch_id=batch.batch_id) }}" class="btn btn-outline-info" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('temperature.log_temperature', batch_id=batch.batch_id) }}" class="btn btn-outline-warning" title="Log Temp">
+                                    <i class="bi bi-thermometer"></i>
+                                </a>
+                                <a href="{{ url_for('batches.edit_batch', batch_id=batch.batch_id) }}" class="btn btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{{ url_for('batches.delete_batch', batch_id=batch.batch_id) }}" style="display: inline;" onsubmit="return confirmDelete('Batch #{{ batch.batch_id }}')">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted mt-3">Total: {{ batches|length }} batch(es)</p>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="bi bi-stack"></i>
+    <h3>No Batches Found</h3>
+    <p>Create your first product batch to start tracking inventory.</p>
+    <a href="{{ url_for('batches.add_batch') }}" class="btn btn-success">
+        <i class="bi bi-plus-square"></i> Create Batch
+    </a>
+</div>
+{% endif %}
+{% endblock %}

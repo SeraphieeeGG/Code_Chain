@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Log Temperature - Cold-Chain Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-thermometer"></i> Log Temperature</h1>
+        <p class="text-muted">Batch #{{ batch.batch_id }} - {{ batch.product.product_name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Temperature Check</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('temperature.log_temperature', batch_id=batch.batch_id) }}" novalidate>
+                    <div class="mb-3">
+                        <label for="temperature" class="form-label">Storage Temperature (°C) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.1" class="form-control form-control-lg" id="temperature" name="temperature" 
+                               value="{{ form_data.temperature if form_data else '' }}"
+                               placeholder="Enter temperature..."
+                               oninput="validateTemperature(this)" required autofocus>
+                        <small class="form-text text-muted">Temperature must be between -50°C and 50°C</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="employee_name" class="form-label">Employee Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="employee_name" name="employee_name" 
+                               value="{{ form_data.employee_name if form_data else '' }}"
+                               placeholder="Your name..."
+                               required>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Temperature Guidelines:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Ideal Temperature: <strong>{{ batch.product.ideal_temperature }}°C</strong></li>
+                            <li>Maximum Safe: <strong>{{ batch.product.maximum_temperature }}°C</strong></li>
+                            <li>Current Status: <span class="badge bg-{{ batch.status|status_color }}">{{ batch.status }}</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Warning:</strong> If temperature exceeds {{ batch.product.maximum_temperature }}°C, 
+                        shelf life will be automatically reduced according to the penalty formula.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('batches.view_batch', batch_id=batch.batch_id) }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-circle"></i> Log Temperature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Batch Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Batch ID:</strong> #{{ batch.batch_id }}</p>
+                <p><strong>Product:</strong> {{ batch.product.product_name }}</p>
+                <p><strong>Category:</strong> <span class="badge bg-info">{{ batch.product.category }}</span></p>
+                <p><strong>Adjusted Expiry:</strong> {{ batch.adjusted_expiry|format_date }}</p>
+                <p><strong>Days Until Expiry:</strong> 
+                    <span class="{% if batch.days_until_expiry() <= 1 %}text-danger{% elif batch.days_until_expiry() <= 3 %}text-warning{% endif %} fw-bold">
+                        {{ batch.days_until_expiry() }} days
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Penalty Calculator</h5>
+            </div>
+            <div class="card-body">
+                <p class="small"><strong>Formula:</strong></p>
+                <code class="small">
+                    Days Deducted = (Temperature - {{ batch.product.maximum_temperature }}) × 0.5
+                </code>
+                
+                <hr>
+                
+                <p class="small"><strong>Examples:</strong></p>
+                <ul class="small">
+                    <li>At {{ batch.product.maximum_temperature }}°C: <strong>0 days</strong> deducted</li>
+                    <li>At {{ batch.product.maximum_temperature + 2 }}°C: <strong>1.0 day</strong> deducted</li>
+                    <li>At {{ batch.product.maximum_temperature + 4 }}°C: <strong>2.0 days</strong> deducted</li>
+                    <li>At {{ batch.product.maximum_temperature + 6 }}°C: <strong>3.0 days</strong> deducted</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Temperature Logs -->
+{% if batch.temperature_logs %}
+<div class="row mt-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Temperature Logs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Temperature</th>
+                                <th>Days Deducted</th>
+                                <th>Recorded At</th>
+                                <th>Employee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in batch.temperature_logs|sort(attribute='recorded_at', reverse=True)[:5] %}
+                            <tr class="{% if log.days_deducted > 0 %}table-danger{% endif %}">
+                                <td class="{% if log.temperature > batch.product.maximum_temperature %}text-danger fw-bold{% else %}text-success{% endif %}">
+                                    {{ log.temperature }}°C
+                                </td>
+                                <td>
+                                    {% if log.days_deducted > 0 %}
+                                        <span class="text-danger fw-bold">{{ log.days_deducted|round(2) }}</span>
+                                    {% else %}
+                                        <span class="text-success">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.recorded_at|format_datetime }}</td>
+                                <td>{{ log.employee_name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('temperature.temperature_history', batch_id=batch.batch_id) }}" class="btn btn-sm btn-outline-primary">
+                    View Full History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
