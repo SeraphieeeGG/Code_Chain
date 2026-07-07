@@ -52,6 +52,5 @@ Thumbs.db
 instance/
 .webassets-cache
 
-# Reports
-reports/
+# Reports (exported files only)
 exports/
