@@ -126,7 +126,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for log in batch.temperature_logs|sort(attribute='recorded_at', reverse=True)[:5] %}
+                            {% for log in batch.temperature_logs|sort(attribute='recorded_at', reverse=True)|list|batch(5)|first %}
                             <tr class="{% if log.days_deducted > 0 %}table-danger{% endif %}">
                                 <td class="{% if log.temperature > batch.product.maximum_temperature %}text-danger fw-bold{% else %}text-success{% endif %}">
                                     {{ log.temperature }}°C
