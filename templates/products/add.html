@@ -31,7 +31,7 @@
                             <option value="Vegetables" {% if selected == 'Vegetables' %}selected{% endif %}>Vegetables</option>
                             <option value="Fruits" {% if selected == 'Fruits' %}selected{% endif %}>Fruits</option>
                             <option value="Seafood" {% if selected == 'Seafood' %}selected{% endif %}>Seafood</option>
-                            <option value="Other" {% if selected == 'Other' %}selected{% endif %}>Other</option>
+                            <option value="Others" {% if selected == 'Others' %}selected{% endif %}>Others</option>
                         </select>
                         <input type="text" class="form-control mt-2" id="category_other" name="category_other"
                                placeholder="Please specify..." style="display:none;">
@@ -40,7 +40,7 @@
                     <script>
                     function toggleOtherCategory(select) {
                         const otherInput = document.getElementById('category_other');
-                        if (select.value === 'Other') {
+                        if (select.value === 'Others') {
                             otherInput.style.display = 'block';
                             otherInput.required = true;
                         } else {
@@ -50,13 +50,13 @@
                         }
                     }
 
-                    // On form submit, replace "Other" with the typed value
+                    // On form submit, replace "Others" with the typed value
                     document.addEventListener('DOMContentLoaded', function() {
                         const form = document.querySelector('form');
                         form.addEventListener('submit', function() {
                             const select = document.getElementById('category');
                             const otherInput = document.getElementById('category_other');
-                            if (select.value === 'Other' && otherInput.value.trim() !== '') {
+                            if (select.value === 'Others' && otherInput.value.trim() !== '') {
                                 select.innerHTML += `<option value="${otherInput.value}" selected>${otherInput.value}</option>`;
                                 select.value = otherInput.value;
                             }
