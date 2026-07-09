@@ -23,8 +23,15 @@
                     
                     <div class="mb-3">
                         <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="category" name="category" 
-                               value="{{ product.category }}" required>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">Select a category...</option>
+                            <option value="Meat" {% if product.category == 'Meat' %}selected{% endif %}>Meat</option>
+                            <option value="Dairy" {% if product.category == 'Dairy' %}selected{% endif %}>Dairy</option>
+                            <option value="Vegetables" {% if product.category == 'Vegetables' %}selected{% endif %}>Vegetables</option>
+                            <option value="Fruits" {% if product.category == 'Fruits' %}selected{% endif %}>Fruits</option>
+                            <option value="Seafood" {% if product.category == 'Seafood' %}selected{% endif %}>Seafood</option>
+                            <option value="Other" {% if product.category == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
                     </div>
                     
                     <div class="row">

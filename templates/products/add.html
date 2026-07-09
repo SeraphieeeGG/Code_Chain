@@ -23,9 +23,16 @@
                     
                     <div class="mb-3">
                         <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="category" name="category" 
-                               value="{{ form_data.category if form_data else '' }}" 
-                               placeholder="e.g., Dairy, Meat, Vegetables" required>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">Select a category...</option>
+                            {% set selected = form_data.category if form_data else '' %}
+                            <option value="Meat" {% if selected == 'Meat' %}selected{% endif %}>Meat</option>
+                            <option value="Dairy" {% if selected == 'Dairy' %}selected{% endif %}>Dairy</option>
+                            <option value="Vegetables" {% if selected == 'Vegetables' %}selected{% endif %}>Vegetables</option>
+                            <option value="Fruits" {% if selected == 'Fruits' %}selected{% endif %}>Fruits</option>
+                            <option value="Seafood" {% if selected == 'Seafood' %}selected{% endif %}>Seafood</option>
+                            <option value="Other" {% if selected == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
                     </div>
                     
                     <div class="row">
