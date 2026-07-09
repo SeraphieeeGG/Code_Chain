@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Create Delivery - Cold-Chain Manager{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-truck"></i> Create Delivery</h1>
+        <p class="text-muted">Batch #{{ batch.batch_id }} - {{ batch.product.product_name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Batch</label>
+                        <input type="text" class="form-control" value="#{{ batch.batch_id }} - {{ batch.product.product_name }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="destination" class="form-label">Destination <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="destination" name="destination" placeholder="Enter delivery destination" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="delivery_status" class="form-label">Delivery Status <span class="text-danger">*</span></label>
+                        <select class="form-select" id="delivery_status" name="delivery_status" required>
+                            <option value="Pending" selected>Pending</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('deliveries.list_deliveries') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Delivery</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6>Batch Info</h6>
+                <p><strong>Product:</strong> {{ batch.product.product_name }}</p>
+                <p><strong>Category:</strong> {{ batch.product.category }}</p>
+                <p><strong>Expiry:</strong> {{ batch.adjusted_expiry|format_date }}</p>
+                <p><strong>Status:</strong> <span class="badge bg-{{ batch.status|status_color }}">{{ batch.status }}</span></p>
+                <p><strong>Quantity:</strong> {{ batch.quantity }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

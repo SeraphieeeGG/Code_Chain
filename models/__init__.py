@@ -12,5 +12,6 @@ from models.user            import User
 from models.product         import Product
 from models.batch           import Batch
 from models.temperature_log import TemperatureLog
+from models.delivery        import Delivery
 
-__all__ = ['db', 'bcrypt', 'User', 'Product', 'Batch', 'TemperatureLog']
+__all__ = ['db', 'bcrypt', 'User', 'Product', 'Batch', 'TemperatureLog', 'Delivery']

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Deliveries - Cold-Chain Manager{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-truck"></i> Deliveries</h1>
+        <p class="text-muted">Manage batch deliveries</p>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-4">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Transit" {% if status_filter == 'In Transit' %}selected{% endif %}>In Transit</option>
+                    <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+                    <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">All Deliveries</h5>
+    </div>
+    <div class="card-body">
+        {% if deliveries %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Delivery ID</th>
+                        <th>Batch ID</th>
+                        <th>Product</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Delivery Date</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in deliveries %}
+                    <tr>
+                        <td>#{{ d.delivery_id }}</td>
+                        <td><a href="{{ url_for('batches.view_batch', batch_id=d.batch_id) }}">#{{ d.batch_id }}</a></td>
+                        <td>{{ d.batch.product.product_name }}</td>
+                        <td>{{ d.destination }}</td>
+                        <td>
+                            {% if d.delivery_status == 'Delivered' %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% elif d.delivery_status == 'In Transit' %}
+                                <span class="badge bg-info">In Transit</span>
+                            {% elif d.delivery_status == 'Cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ d.delivery_date|format_datetime if d.delivery_date else '—' }}</td>
+                        <td>{{ d.created_at|format_datetime }}</td>
+                        <td>
+                            <a href="{{ url_for('deliveries.view_delivery', delivery_id=d.delivery_id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{{ url_for('deliveries.edit_delivery', delivery_id=d.delivery_id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <form method="post" action="{{ url_for('deliveries.delete_delivery', delivery_id=d.delivery_id) }}" style="display:inline;" onsubmit="return confirm('Delete this delivery?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-truck display-4 text-muted"></i>
+            <p class="mt-3 text-muted">No deliveries found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

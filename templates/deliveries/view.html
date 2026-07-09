@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}View Delivery - Cold-Chain Manager{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-truck"></i> Delivery #{{ delivery.delivery_id }}</h1>
+        <p class="text-muted">Delivery details</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('deliveries.edit_delivery', delivery_id=delivery.delivery_id) }}" class="btn btn-secondary">Edit</a>
+        <a href="{{ url_for('deliveries.list_deliveries') }}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Delivery Info</h5></div>
+            <div class="card-body">
+                <p><strong>Delivery ID:</strong> #{{ delivery.delivery_id }}</p>
+                <p><strong>Destination:</strong> {{ delivery.destination }}</p>
+                <p><strong>Status:</strong>
+                    {% if delivery.delivery_status == 'Delivered' %}
+                        <span class="badge bg-success">Delivered</span>
+                    {% elif delivery.delivery_status == 'In Transit' %}
+                        <span class="badge bg-info">In Transit</span>
+                    {% elif delivery.delivery_status == 'Cancelled' %}
+                        <span class="badge bg-danger">Cancelled</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </p>
+                <p><strong>Delivery Date:</strong> {{ delivery.delivery_date|format_datetime if delivery.delivery_date else '—' }}</p>
+                <p><strong>Created At:</strong> {{ delivery.created_at|format_datetime }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Batch Info</h5></div>
+            <div class="card-body">
+                <p><strong>Batch ID:</strong> <a href="{{ url_for('batches.view_batch', batch_id=delivery.batch_id) }}">#{{ delivery.batch_id }}</a></p>
+                <p><strong>Product:</strong> {{ delivery.batch.product.product_name }}</p>
+                <p><strong>Category:</strong> {{ delivery.batch.product.category }}</p>
+                <p><strong>Expiry:</strong> {{ delivery.batch.adjusted_expiry|format_date }}</p>
+                <p><strong>Batch Status:</strong> <span class="badge bg-{{ delivery.batch.status|status_color }}">{{ delivery.batch.status }}</span></p>
+                <p><strong>Quantity:</strong> {{ delivery.batch.quantity }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

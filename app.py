@@ -8,7 +8,7 @@ from flask import Flask, redirect, url_for
 from flask_login import LoginManager
 from models import db, bcrypt
 from models.user import User
-from routes import auth_bp, product_bp, batch_bp, temperature_bp, dashboard_bp, report_bp
+from routes import auth_bp, product_bp, batch_bp, temperature_bp, dashboard_bp, report_bp, delivery_bp
 from config import config
 import os
 
@@ -50,6 +50,7 @@ def create_app(config_name='default'):
     app.register_blueprint(batch_bp)
     app.register_blueprint(temperature_bp)
     app.register_blueprint(report_bp)
+    app.register_blueprint(delivery_bp)
 
     # ── Template filters ───────────────────────────────────────────────
     @app.template_filter('date')
