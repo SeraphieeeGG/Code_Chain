@@ -23,16 +23,46 @@
                     
                     <div class="mb-3">
                         <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-                        <select class="form-select" id="category" name="category" required>
+                        <select class="form-select" id="category" name="category" required onchange="toggleOtherCategory(this)">
                             <option value="">Select a category...</option>
                             <option value="Meat" {% if product.category == 'Meat' %}selected{% endif %}>Meat</option>
                             <option value="Dairy" {% if product.category == 'Dairy' %}selected{% endif %}>Dairy</option>
                             <option value="Vegetables" {% if product.category == 'Vegetables' %}selected{% endif %}>Vegetables</option>
                             <option value="Fruits" {% if product.category == 'Fruits' %}selected{% endif %}>Fruits</option>
                             <option value="Seafood" {% if product.category == 'Seafood' %}selected{% endif %}>Seafood</option>
-                            <option value="Other" {% if product.category == 'Other' %}selected{% endif %}>Other</option>
+                            <option value="Other" {% if product.category not in ['Meat','Dairy','Vegetables','Fruits','Seafood'] %}selected{% endif %}>Other</option>
                         </select>
+                        <input type="text" class="form-control mt-2" id="category_other" name="category_other"
+                               placeholder="Please specify..."
+                               value="{{ product.category if product.category not in ['Meat','Dairy','Vegetables','Fruits','Seafood'] else '' }}"
+                               style="display:{{ 'block' if product.category not in ['Meat','Dairy','Vegetables','Fruits','Seafood'] else 'none' }};">
                     </div>
+
+                    <script>
+                    function toggleOtherCategory(select) {
+                        const otherInput = document.getElementById('category_other');
+                        if (select.value === 'Other') {
+                            otherInput.style.display = 'block';
+                            otherInput.required = true;
+                        } else {
+                            otherInput.style.display = 'none';
+                            otherInput.required = false;
+                            otherInput.value = '';
+                        }
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const form = document.querySelector('form');
+                        form.addEventListener('submit', function() {
+                            const select = document.getElementById('category');
+                            const otherInput = document.getElementById('category_other');
+                            if (select.value === 'Other' && otherInput.value.trim() !== '') {
+                                select.innerHTML += `<option value="${otherInput.value}" selected>${otherInput.value}</option>`;
+                                select.value = otherInput.value;
+                            }
+                        });
+                    });
+                    </script>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">

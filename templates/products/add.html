@@ -23,7 +23,7 @@
                     
                     <div class="mb-3">
                         <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-                        <select class="form-select" id="category" name="category" required>
+                        <select class="form-select" id="category" name="category" required onchange="toggleOtherCategory(this)">
                             <option value="">Select a category...</option>
                             {% set selected = form_data.category if form_data else '' %}
                             <option value="Meat" {% if selected == 'Meat' %}selected{% endif %}>Meat</option>
@@ -33,7 +33,36 @@
                             <option value="Seafood" {% if selected == 'Seafood' %}selected{% endif %}>Seafood</option>
                             <option value="Other" {% if selected == 'Other' %}selected{% endif %}>Other</option>
                         </select>
+                        <input type="text" class="form-control mt-2" id="category_other" name="category_other"
+                               placeholder="Please specify..." style="display:none;">
                     </div>
+
+                    <script>
+                    function toggleOtherCategory(select) {
+                        const otherInput = document.getElementById('category_other');
+                        if (select.value === 'Other') {
+                            otherInput.style.display = 'block';
+                            otherInput.required = true;
+                        } else {
+                            otherInput.style.display = 'none';
+                            otherInput.required = false;
+                            otherInput.value = '';
+                        }
+                    }
+
+                    // On form submit, replace "Other" with the typed value
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const form = document.querySelector('form');
+                        form.addEventListener('submit', function() {
+                            const select = document.getElementById('category');
+                            const otherInput = document.getElementById('category_other');
+                            if (select.value === 'Other' && otherInput.value.trim() !== '') {
+                                select.innerHTML += `<option value="${otherInput.value}" selected>${otherInput.value}</option>`;
+                                select.value = otherInput.value;
+                            }
+                        });
+                    });
+                    </script>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
