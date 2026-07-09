@@ -47,6 +47,7 @@ def add_product():
             product_data = {
                 'product_name': request.form.get('product_name'),
                 'category': request.form.get('category'),
+                'supplier_name': request.form.get('supplier_name', '').strip(),
                 'ideal_temperature': request.form.get('ideal_temperature'),
                 'maximum_temperature': request.form.get('maximum_temperature'),
                 'shelf_life_days': request.form.get('shelf_life_days')
@@ -62,6 +63,7 @@ def add_product():
             product = Product(
                 product_name=product_data['product_name'],
                 category=product_data['category'],
+                supplier_name=product_data['supplier_name'] or None,
                 ideal_temperature=float(product_data['ideal_temperature']),
                 maximum_temperature=float(product_data['maximum_temperature']),
                 shelf_life_days=int(product_data['shelf_life_days'])
@@ -88,10 +90,11 @@ def edit_product(product_id):
     
     if request.method == 'POST':
         try:
-            # Get form data
+            # Get form data (product_name and category are not editable)
             product_data = {
-                'product_name': request.form.get('product_name'),
-                'category': request.form.get('category'),
+                'product_name': product.product_name,
+                'category': product.category,
+                'supplier_name': request.form.get('supplier_name', '').strip(),
                 'ideal_temperature': request.form.get('ideal_temperature'),
                 'maximum_temperature': request.form.get('maximum_temperature'),
                 'shelf_life_days': request.form.get('shelf_life_days')
@@ -103,9 +106,8 @@ def edit_product(product_id):
                 flash(error_message, 'error')
                 return render_template('products/edit.html', product=product)
             
-            # Update product
-            product.product_name = product_data['product_name']
-            product.category = product_data['category']
+            # Update product (product_name and category are locked)
+            product.supplier_name = product_data['supplier_name'] or None
             product.ideal_temperature = float(product_data['ideal_temperature'])
             product.maximum_temperature = float(product_data['maximum_temperature'])
             product.shelf_life_days = int(product_data['shelf_life_days'])

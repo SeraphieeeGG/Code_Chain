@@ -22,6 +22,13 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="supplier_name" class="form-label">Supplier Name</label>
+                        <input type="text" class="form-control" id="supplier_name" name="supplier_name"
+                               value="{{ form_data.supplier_name if form_data else '' }}"
+                               placeholder="Enter supplier name (optional)">
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
                         <select class="form-select" id="category" name="category" required onchange="toggleOtherCategory(this)">
                             <option value="">Select a category...</option>
